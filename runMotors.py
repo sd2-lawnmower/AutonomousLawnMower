@@ -1,0 +1,92 @@
+import RPi.GPIO as GPIO
+import time, serial
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+
+
+GPIO.setup(12, GPIO.OUT) #pin for motor 1
+GPIO.setup(15, GPIO.OUT) #pin for direction 1
+GPIO.setup(32, GPIO.OUT) #pin for motor 2
+GPIO.setup(16, GPIO.OUT) #pin for direction 2
+
+pwmOne = GPIO.PWM(12, 1000)
+pwmTwo = GPIO.PWM(32, 1000)
+
+pwmOne.start(0)
+pwmTwo.start(0)
+
+serPhone = serial.Serial("/dev/rfcomm0", 9600, timeout = 0) #initialize bluetooth
+serPhone.baudrate = 9600
+pwmPower = 100
+
+try:
+  while True:
+    data = serPhone.read(2)
+    data = data.decode("utf-8")
+    data = data.lstrip(' ')
+    print("Data: ", data)
+    
+    if("OH" in data):
+        pwmPower = 100
+    if("NP" in data):
+        pwmPower = 90
+    if("EP" in data):
+        pwmPower = 80
+    
+    
+    
+    #move forward
+    if("TF" in data):
+        GPIO.output(15, 1)
+        GPIO.output(16, 0)
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/16)
+            pwmOne.ChangeDutyCycle(pwmPower)
+            pwmTwo.ChangeDutyCycle(pwmPower)
+            print("Data: ", data)
+            
+    #move backward
+    if("TB" in data):
+        GPIO.output(15, 0)
+        GPIO.output(16, 1)
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/16)
+            pwmOne.ChangeDutyCycle(pwmPower)
+            pwmTwo.ChangeDutyCycle(pwmPower)
+            print("Data: ", data)   
+    
+    #turn left
+    if("TL" in data):
+        GPIO.output(15, 0)
+        GPIO.output(16, 0)
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/16)
+            pwmOne.ChangeDutyCycle(pwmPower)
+            pwmTwo.ChangeDutyCycle(pwmPower)
+            print("Data: ", data)
+            
+            
+    #turn right
+    if("TR" in data):
+        GPIO.output(15, 1)
+        GPIO.output(16, 1)
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/16)
+            pwmOne.ChangeDutyCycle(pwmPower)
+            pwmTwo.ChangeDutyCycle(pwmPower)
+            print("Data: ", data)
+            
+    time.sleep(1/16)  
+    pwmOne.ChangeDutyCycle(0)
+    pwmTwo.ChangeDutyCycle(0)
+    
+except KeyboardInterrupt:
+    pass
+
+pwm.stop()                         # stop PWM
+GPIO.cleanup()                     # resets GPIO ports used back to input mode

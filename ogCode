@@ -1,0 +1,105 @@
+import RPi.GPIO as GPIO
+import time, serial
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+
+
+GPIO.setup(12, GPIO.OUT) #pin for motor 1
+GPIO.setup(15, GPIO.OUT) #pin for direction 1
+GPIO.setup(32, GPIO.OUT) #pin for motor 2
+GPIO.setup(16, GPIO.OUT) #pin for direction 2
+pwmOne = GPIO.PWM(12, 1000)
+
+pwmTwo = GPIO.PWM(32, 1000)
+
+dc=0                               # set dc variable to 0 for 0%
+pwmOne.start(dc)
+pwmTwo.start(dc)
+
+serPhone = serial.Serial("/dev/rfcomm0", 9600, timeout = 0)
+serPhone.baudrate = 9600
+# Start PWM with 0% duty cycle
+
+
+
+try:
+  while True:
+    data = serPhone.read(2)
+    data = data.decode("utf-8")
+    data = data.lstrip(' ')
+    print("Data: ", data)
+    
+    
+    #move forward
+    if("TF" in data):
+        pwmOne.ChangeDutyCycle(50)
+        GPIO.output(15, 1)
+        pwmTwo.ChangeDutyCycle(50)
+        GPIO.output(16, 0)
+        print("Duty Cycle at 50!!")
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/4)
+            pwmOne.ChangeDutyCycle(100)
+            pwmTwo.ChangeDutyCycle(100)
+            print("Data: ", data)
+            print("In the loop!!!")
+            
+    #move backward
+    if("TB" in data):
+        pwmOne.ChangeDutyCycle(50)
+        GPIO.output(15, 0)
+        pwmTwo.ChangeDutyCycle(50)
+        GPIO.output(16, 1)
+        print("Duty Cycle at 50!!")
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/4)
+            pwmOne.ChangeDutyCycle(100)
+            pwmTwo.ChangeDutyCycle(100)
+            print("Data: ", data)
+            print("In the loop!!!")
+            
+    
+    #turn left
+    if("TL" in data):
+        pwmOne.ChangeDutyCycle(50)
+        GPIO.output(15, 0)
+        pwmTwo.ChangeDutyCycle(50)
+        GPIO.output(16, 0)
+        print("Duty Cycle at 50!!")
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/4)
+            pwmOne.ChangeDutyCycle(100)
+            pwmTwo.ChangeDutyCycle(100)
+            print("Data: ", data)
+            print("In the loop!!!")
+            
+            
+    #turn right
+    if("TR" in data):
+        pwmOne.ChangeDutyCycle(50)
+        GPIO.output(15, 1)
+        pwmTwo.ChangeDutyCycle(50)
+        GPIO.output(16, 1)
+        print("Duty Cycle at 50!!")
+        while("TS" not in data):
+            data = serPhone.read(2).decode("utf-8").lstrip(" ");
+            time.sleep(1/4)
+            pwmOne.ChangeDutyCycle(100)
+            pwmTwo.ChangeDutyCycle(100)
+            print("Data: ", data)
+            print("In the loop!!!")
+            
+    time.sleep(1/16)  
+    pwmOne.ChangeDutyCycle(0)
+    pwmTwo.ChangeDutyCycle(0)
+    
+except KeyboardInterrupt:
+    pass
+
+pwm.stop()                         # stop PWM
+GPIO.cleanup()                     # resets GPIO ports used back to input mode
+
